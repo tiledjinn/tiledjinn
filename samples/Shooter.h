@@ -1,7 +1,7 @@
 #ifndef _SHOOTER_H
 #define _SHOOTER_H
 
-#include "Tilengine.h"
+#include "tiledjinn.h"
 #include "Sin.h"
 #include "Actor.h"
 

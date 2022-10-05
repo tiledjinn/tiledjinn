@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "Tilengine.h"
+#include "tiledjinn.h"
 #include "Simon.h"
 
 #define WIDTH	400

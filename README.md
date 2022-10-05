@@ -1,35 +1,19 @@
-![Tilengine logo](Tilengine.png)
-# Tilengine - The 2D retro graphics engine
+![TileDjinn logo](tiledjinn.png)
+# TileDjinn - The 2D retro graphics engine
 [![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
-[![Build Status](https://travis-ci.org/megamarc/Tilengine.svg?branch=master)](https://travis-ci.org/megamarc/Tilengine)
 
-Tilengine is an open source, cross-platform 2D graphics engine for creating classic/retro games with tile maps, sprites and palettes. Its unique scanline-based rendering algorithm makes raster effects a core feature, a technique used by many games running on real 2D graphics chips.
+TileDjinn is an open source, cross-platform 2D graphics engine for creating classic/retro games with tile maps, sprites and palettes. Its unique scanline-based rendering algorithm makes raster effects a core feature, a technique used by many games running on real 2D graphics chips.
 
-http://www.tilengine.org
+https://tiledjinn.com
 
 # Contents
-- [Tilengine - The 2D retro graphics engine](#tilengine---the-2d-retro-graphics-engine)
+- [TileDjinn - The 2D retro graphics engine](#tiledjinn---the-2d-retro-graphics-engine)
 - [Contents](#contents)
 - [Features](#features)
 - [Getting binaries](#getting-binaries)
-  - [Download from itch.io](#download-from-itchio)
   - [Build from source](#build-from-source)
-    - [Windows](#windows)
-    - [Debian-based linux](#debian-based-linux)
-    - [Apple OSX](#apple-osx)
-- [Running the samples](#running-the-samples)
-  - [Windows](#windows-1)
-  - [Unix-like](#unix-like)
-- [The tilengine window](#the-tilengine-window)
-- [Creating your first program](#creating-your-first-program)
-  - [Windows](#windows-2)
-  - [Linux](#linux)
-  - [Apple OS X](#apple-os-x)
 - [Documentation](#documentation)
 - [Editing assets](#editing-assets)
-- [Creating packages](#creating-packages)
-- [Bindings](#bindings)
-- [Contributors](#contributors)
 
 # Features
 * Written in portable C (C99)
@@ -39,7 +23,6 @@ http://www.tilengine.org
 * Streamlined, easy to learn API that requires very little lines of code
 * Built-in SDL-based windowing for quick tests
 * Integrate inside any existing framework as a slave renderer
-* Loads assets from open standard standard file formats
 * Create or modify graphic assets procedurally at run time
 * True raster effects: modify render parameters between scanlines
 * Background layer scaling and rotation
@@ -47,43 +30,92 @@ http://www.tilengine.org
 * Several blending modes for layers and sprites
 * Pixel accurate sprite vs sprite and sprite vs layer collision detection
 * Special effects: per-column offset, mosaic, per-pixel displacement, CRT emulation...
-* Supports packaged assets with optional AES-128 encryption
 
 # Getting binaries
-
-## Download from itch.io
-The recommended way to get prebuilt binaries ready to install, run and test samples is grabbing them from official [itch.io download](https://megamarc.itch.io/tilengine.account). Just download the package for your platform, they contain required dependencies to run.
+A static library for windows MSVC /MDd is provided.
 
 ## Build from source
-You can also build the library from source. Tilengine requires `SDL2` and `libpng` to build, you must provide these libraries yourself depending on your target platform.
+You can also build the library from source. TileDjinn requires `SDL2` and `libpng` to build, you must provide these libraries yourself depending on your target platform.
 
-### Windows
-You must provide development libraries:
-* SDL: https://www.libsdl.org/download-2.0.php
-* libpng: http://gnuwin32.sourceforge.net/packages/libpng.htm
+Just clone the source. The build uses cmake.
 
-Put the following files inside the `src` directory:
-Path | Files
------|---------------------------------------
-`src\libpng`             | libpng headers
-`src\libpng\$(Platform)` | libpng.lib import library
-`src\sdl\SDL2`           | SDL2 headers
-`src\sdl\lib\$(Platform)`| SDL2.lib import library
+# Contributing
+Feel free to submit PR's. I'll try to look at them within 7 days. Please understand that my time for managing this project outside my own use is neither infinite nor funded.
 
-**NOTE**: If you're having problems setting up these dependencies, you can download them already pre-packaged from [itch.io downloads](https://megamarc.itch.io/tilengine), file is `windows_libs.zip`. It contains headers and libraries for both 32 and 64 bit platforms.
+# Samples
+Coming soon..
 
-### Debian-based linux
-Just install standard packages `libpng-dev` and `libsdl2-dev`
+# Instructions for use
+Call `TLN_Init` and `TLN_CreateWindow` to initialize the engine.
 
-### Apple OSX
-SDL2 development libraries for OSX can be download here:
-https://www.libsdl.org/download-2.0.php
+Create palettes based on your platform's constraints using `TLN_CreatePalette`. Create a tileset based on your platform's constraints using `TLN_CreateTileset`. Create a tile map per layer using `TLN_CreateTilemap`.
 
+For my projects, the TileDjinn port's main loop looks something like this:
+
+```C
+TLN_Tilemap *tilemaps;
+TLN_Tileset tileset;
+
+int main() {
+  TLN_Init(WIDTH, HEIGHT, MAX_LAYER, 128);
+  TLN_CreateWindow(NULL, 0);
+  
+  {
+    int i;
+    for (i = 0; i < NUM_PALETTES; ++i) {
+      TLN_CreatePalette(i, NUM_PALETTES);
+    }
+  }
+  
+  {
+    int screen;
+
+    tileset = TLN_CreateTileset(MAX_TILES, TILE_WIDTH, TILE_HEIGHT, 0);
+    for (screen = 0; screen < MAX_LAYER; ++screen) {
+      tilemaps[screen] = TLN_CreateTilemap(32, 32, 0, 0, tileset);
+    }
+  }
+  
+  /* this is semantically wrong, but is the easiest way to re-order the layers in the right direction.. */
+  TLN_SetLayerTilemap(SCREEN1, tilemaps[SCREEN2]);
+  TLN_SetLayerTilemap(SCREEN2, tilemaps[SCREEN1]);
+  
+  game_init(); /* platform independent game initialization */
+
+  /* main loop */
+  while (TLN_ProcessWindow()) {
+    game_loop(); /* single iteration of the game loop */
+    TLN_DrawFrame(0);
+    TLN_WaitRedraw();
+  }
+
+  /* de-init */
+  {
+    int i;
+    for (i = 0; i < MAX_LAYER; ++i) {
+      TLN_DeleteTilemap(tilemaps[i]);
+    }
+    TLN_DeleteTileset(tileset);
+
+    for (i = 0; i < NUM_PALETTES; ++i) {
+      TLN_DeletePalette(i);
+    }
+  }
+
+
+  TLN_DeleteWindow();
+  TLN_Deinit();
+}
+
+
+```
+
+<!--
 # Running the samples
 
-C samples are located in `Tilengine/samples` folder. To build them you need the gcc compiler suite, and/or Visual C++ in windows.
+C samples are located in `TileDjinn/samples` folder. To build them you need the gcc compiler suite, and/or Visual C++ in windows.
 * **Linux**: the GCC compiler suite is already installed by default
-* **Windows**: you must install [MinGW](http://www.mingw.org/) or [Visual Studio Community](https://www.visualstudio.com/vs/community/)
+* **Windows**: TileDjinn is tested using the MSVC runtime
 * **Apple OS X**: You must install [Command-line tools for Xcode](https://developer.apple.com/xcode/). An Apple ID account is required.
 
 Once installed, open a console window in the C samples folder and type the suitable command depending on your platform:
@@ -98,15 +130,15 @@ Once installed, open a console window in the C samples folder and type the suita
 > make
 ```
 
-# The tilengine window
+# The tiledjinn window
 The following actions can be done in the created window:
 * Press <kbd>Esc</kbd> to close the window
 * Press <kbd>Alt</kbd> + <kbd>Enter</kbd> to toggle full-screen/windowed
 * Press <kbd>Backspace</kbd> to toggle built-in CRT effect (enabled by default)
 
 # Creating your first program
-The following section shows how to create from scratch and execute a simple tilengine application that does the following:
-1. Reference the inclusion of Tilengine module
+The following section shows how to create from scratch and execute a simple tiledjinn application that does the following:
+1. Reference the inclusion of TileDjinn module
 2. Initialize the engine with a resolution of 400x240, one layer, no sprites and no palette animations
 3. Load a *tilemap*, the asset that contains background layer data
 4. Attach the loaded tilemap to the allocated background layer
@@ -116,9 +148,9 @@ The following section shows how to create from scratch and execute a simple tile
 
 ![Test](test.png)
 
-Create a file called `test.c` in `Tilengine/samples` folder, and type the following code:
+Create a file called `test.c` in `TileDjinn/samples` folder, and type the following code:
 ```c
-#include "Tilengine.h"
+#include "tiledjinn.h"
 
 void main(void) {
     TLN_Tilemap foreground;
@@ -140,58 +172,26 @@ Now the program must be built to produce an executable. Open a console window in
 
 ## Windows
 ```
-> gcc test.c -o test.exe -I"../include" ../lib/Win32/Tilengine.dll
+> gcc test.c -o test.exe -I"../include" ../lib/Win32/tiledjinn.dll
 > test.exe
 ```
 
 ## Linux
 ```
-> gcc test.c -o test -lTilengine -lm
+> gcc test.c -o test -ltiledjinn -lm
 > ./test
 ```
 
 ## Apple OS X
 ```
-> gcc test.c -o test "/usr/local/lib/Tilengine.dylib" -lm
+> gcc test.c -o test "/usr/local/lib/tiledjinn.dylib" -lm
 > ./test
 ```
-
-# Documentation
-Doxygen-based documentation and API reference can be found in the following link:
-http://www.tilengine.org/doc
+-->
 
 # Editing assets
-Tilengine is just a programming library that doesn't come with any editor, but the files it loads are made with standard open-source tools. Samples come bundled with several ready-to-use assets, but these are the tools you'll need to edit or create new ones:
-* Source code: [VSCode](https://code.visualstudio.com/), [Notepad++](https://notepad-plus-plus.org/downloads/)...
-* Graphics, tiles & sprites: [Aseprite](https://www.aseprite.org/), [Piskel](https://www.piskelapp.com/), [Grafx2](http://grafx2.chez.com/)...
-* Maps: [Tiled Map Editor](https://www.mapeditor.org/)
+TileDjinn is just a programming library that doesn't come with any editor, but the files it loads are made with standard tools. Samples come bundled with several ready-to-use assets.
 
-# Creating packages
-To create a package with all the assets, the add-on tool [ResourcePacker](https://megamarc.itch.io/resourcepacker) must be used. It's a Windows command-line tool that creates packages with files keeping the same directory structure. Tilengine has built-in support for loading assets from these packages just as if they still were stand-alone files.
-
-# Bindings
-There are bindings to use Tilengine from several programming languages:
-
-Language  |Binding
-----------|-----------------------------------------
-C/C++     | Native support, no binding required
-Python    | [PyTilengine](https://github.com/megamarc/PyTilengine)
-C#        | [CsTilengine](https://github.com/megamarc/CsTilengine)
-C#        | [CsTilenginePure](https://github.com/vonhoff/CsTilenginePure)
-Pascal    | [PascalTileEngine](https://github.com/turric4n/PascalTileEngine)
-FreeBasic | [FBTilengine](https://github.com/megamarc/FBTilengine)
-Java	    | [JTilengine](https://github.com/megamarc/JTilengine)
-Rust      | [tilengine-sys](https://crates.io/crates/tilengine-sys)
-LuaJIT    | [tilengine_libretro](https://github.com/megamarc/Tilengine/tree/libretro) ([libretro](https://www.libretro.com) core)
-Ring      | [RingTilengine](https://github.com/ring-lang/ring/tree/master/extensions/ringtilengine)
-
-# Contributors
-These kind users contributed to tilengine:
-
-@turric4an - the Pascal wrapper<br>
-@davideGiovannini - help with the Linux-x86_64 port<br>
-@shayneoneill - help with the OS X port<br>
-@adtennant - provided cmake and pkg-config support<br>
-@tvasenin - improved C# binding<br>
-@tyoungjr - LUA/FFI binding<br>
-@vonhoff - provided CsTilenginePure binding<br>
+I recommend these tools for development (not referral links):
+* Source code: [CLion](https://www.jetbrains.com/clion/)
+* Graphics, tiles, sprites, and maps: [Cosmigo Pro Motion](https://www.cosmigo.com/)

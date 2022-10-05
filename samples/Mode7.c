@@ -13,7 +13,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "Tilengine.h"
+#include "tiledjinn.h"
 #include "Sin.h"
 
 #define WIDTH	400

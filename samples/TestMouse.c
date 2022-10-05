@@ -13,7 +13,7 @@
 ******************************************************************************/
 
 #include <stdlib.h>
-#include "Tilengine.h"
+#include "tiledjinn.h"
 #define _STDINT_H_
 #include "SDL2/SDL_events.h"
 

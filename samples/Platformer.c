@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Tilengine.h"
+#include "tiledjinn.h"
 
 #define WIDTH	400
 #define HEIGHT	240

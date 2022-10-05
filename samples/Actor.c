@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
-#include "Tilengine.h"
+#include "tiledjinn.h"
 #include "Actor.h"
 
 /* local variables */

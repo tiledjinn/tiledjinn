@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "Tilengine.h"
+#include "tiledjinn.h"
 
 #define WIDTH	400
 #define HEIGHT	240

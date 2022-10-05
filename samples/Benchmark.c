@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "Tilengine.h"
+#include "tiledjinn.h"
 
 #define HRES		400
 #define VRES		240

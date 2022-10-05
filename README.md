@@ -4,7 +4,7 @@
 
 TileDjinn is an open source, cross-platform 2D graphics engine for creating classic/retro games with tile maps, sprites and palettes. Its unique scanline-based rendering algorithm makes raster effects a core feature, a technique used by many games running on real 2D graphics chips.
 
-http://www.tiledjinn.com
+https://tiledjinn.com
 
 # Contents
 - [TileDjinn - The 2D retro graphics engine](#tiledjinn---the-2d-retro-graphics-engine)
@@ -12,18 +12,8 @@ http://www.tiledjinn.com
 - [Features](#features)
 - [Getting binaries](#getting-binaries)
   - [Build from source](#build-from-source)
-- [Running the samples](#running-the-samples)
-  - [Windows](#windows-1)
-  - [Unix-like](#unix-like)
-- [The window](#the-window)
-- [Creating your first program](#creating-your-first-program)
-  - [Windows](#windows-2)
-  - [Linux](#linux)
-  - [Apple OS X](#apple-os-x)
 - [Documentation](#documentation)
 - [Editing assets](#editing-assets)
-- [Creating packages](#creating-packages)
-- [Bindings](#bindings)
 
 # Features
 * Written in portable C (C99)
@@ -33,7 +23,6 @@ http://www.tiledjinn.com
 * Streamlined, easy to learn API that requires very little lines of code
 * Built-in SDL-based windowing for quick tests
 * Integrate inside any existing framework as a slave renderer
-* Loads assets from open standard standard file formats
 * Create or modify graphic assets procedurally at run time
 * True raster effects: modify render parameters between scanlines
 * Background layer scaling and rotation
@@ -41,20 +30,92 @@ http://www.tiledjinn.com
 * Several blending modes for layers and sprites
 * Pixel accurate sprite vs sprite and sprite vs layer collision detection
 * Special effects: per-column offset, mosaic, per-pixel displacement, CRT emulation...
-* Supports packaged assets with optional AES-128 encryption
 
 # Getting binaries
+A static library for windows MSVC /MDd is provided.
 
 ## Build from source
 You can also build the library from source. TileDjinn requires `SDL2` and `libpng` to build, you must provide these libraries yourself depending on your target platform.
 
 Just clone the source. The build uses cmake.
 
+# Contributing
+Feel free to submit PR's. I'll try to look at them within 7 days. Please understand that my time for managing this project outside my own use is neither infinite nor funded.
+
+# Samples
+Coming soon..
+
+# Instructions for use
+Call `TLN_Init` and `TLN_CreateWindow` to initialize the engine.
+
+Create palettes based on your platform's constraints using `TLN_CreatePalette`. Create a tileset based on your platform's constraints using `TLN_CreateTileset`. Create a tile map per layer using `TLN_CreateTilemap`.
+
+For my projects, the TileDjinn port's main loop looks something like this:
+
+```C
+TLN_Tilemap *tilemaps;
+TLN_Tileset tileset;
+
+int main() {
+  TLN_Init(WIDTH, HEIGHT, MAX_LAYER, 128);
+  TLN_CreateWindow(NULL, 0);
+  
+  {
+    int i;
+    for (i = 0; i < NUM_PALETTES; ++i) {
+      TLN_CreatePalette(i, NUM_PALETTES);
+    }
+  }
+  
+  {
+    int screen;
+
+    tileset = TLN_CreateTileset(MAX_TILES, TILE_WIDTH, TILE_HEIGHT, 0);
+    for (screen = 0; screen < MAX_LAYER; ++screen) {
+      tilemaps[screen] = TLN_CreateTilemap(32, 32, 0, 0, tileset);
+    }
+  }
+  
+  /* this is semantically wrong, but is the easiest way to re-order the layers in the right direction.. */
+  TLN_SetLayerTilemap(SCREEN1, tilemaps[SCREEN2]);
+  TLN_SetLayerTilemap(SCREEN2, tilemaps[SCREEN1]);
+  
+  game_init(); /* platform independent game initialization */
+
+  /* main loop */
+  while (TLN_ProcessWindow()) {
+    game_loop(); /* single iteration of the game loop */
+    TLN_DrawFrame(0);
+    TLN_WaitRedraw();
+  }
+
+  /* de-init */
+  {
+    int i;
+    for (i = 0; i < MAX_LAYER; ++i) {
+      TLN_DeleteTilemap(tilemaps[i]);
+    }
+    TLN_DeleteTileset(tileset);
+
+    for (i = 0; i < NUM_PALETTES; ++i) {
+      TLN_DeletePalette(i);
+    }
+  }
+
+
+  TLN_DeleteWindow();
+  TLN_Deinit();
+}
+
+
+```
+
+<!--
 # Running the samples
 
 C samples are located in `TileDjinn/samples` folder. To build them you need the gcc compiler suite, and/or Visual C++ in windows.
 * **Linux**: the GCC compiler suite is already installed by default
-* **Windows**: you must install [MinGW](http://www.mingw.org/) or [Visual Studio Community](https://www.visualstudio.com/vs/community/)
+* **Windows**: TileDjinn is tested using the MSVC runtime
 * **Apple OS X**: You must install [Command-line tools for Xcode](https://developer.apple.com/xcode/). An Apple ID account is required.
 
 Once installed, open a console window in the C samples folder and type the suitable command depending on your platform:
@@ -89,7 +150,7 @@ The following section shows how to create from scratch and execute a simple tile
 
 Create a file called `test.c` in `TileDjinn/samples` folder, and type the following code:
 ```c
-#include "Tilengine.h"
+#include "tiledjinn.h"
 
 void main(void) {
     TLN_Tilemap foreground;
@@ -117,7 +178,7 @@ Now the program must be built to produce an executable. Open a console window in
 
 ## Linux
 ```
-> gcc test.c -o test -lTileDjinn -lm
+> gcc test.c -o test -ltiledjinn -lm
 > ./test
 ```
 
@@ -126,6 +187,7 @@ Now the program must be built to produce an executable. Open a console window in
 > gcc test.c -o test "/usr/local/lib/tiledjinn.dylib" -lm
 > ./test
 ```
+-->
 
 # Editing assets
 TileDjinn is just a programming library that doesn't come with any editor, but the files it loads are made with standard tools. Samples come bundled with several ready-to-use assets.
@@ -133,6 +195,3 @@ TileDjinn is just a programming library that doesn't come with any editor, but t
 I recommend these tools for development (not referral links):
 * Source code: [CLion](https://www.jetbrains.com/clion/)
 * Graphics, tiles, sprites, and maps: [Cosmigo Pro Motion](https://www.cosmigo.com/)
-
-# Creating packages
-To create a package with all the assets, the add-on tool [ResourcePacker](https://megamarc.itch.io/resourcepacker) must be used. It's a Windows command-line tool that creates packages with files keeping the same directory structure. TileDjinn has built-in support for loading assets from these packages just as if they still were stand-alone files.
